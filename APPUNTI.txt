@@ -1,0 +1,105 @@
+Twitter web site
+frameworks used in this project:
+-tailwindCSS
+_______________________________________________________________________________________________________
+if the table name is different, che non rispetta la "naming convention"
+and columns are custom
+belongsToMany(User::class, 'tableName', 'foreignPivotKey/nome attributo= user_id', 'relatedPivotKey/nome attributo=following_user_id')
+_______________________________________________________________________________________________________
+Middleware AUTH
+ci sono due modi per impostarlo:
+	1. web.php
+		Route::middleware('auth')->group(function(){
+			Route::post('/tweets', 'TweetController@store');
+			Route::get('/tweets', 'TweetController@index')->name('home');;
+		});
+	2. Controller Constructor:
+		public function __construct(){
+        	$this->middleware('auth');
+    	}
+_______________________________________________________________________________________________________
+$this->method VS $this->method()
+	// get the follow user's ids
+$meAndFriendsIds = $this->follows->pluck('id');
+	// $this->follows will load all everyone of the current user follows
+	// if a person is following 5k people this will create a collection of 5k users
+	// alternative: (more performant solution)
+$meAndFriendsIds = $this->follows()->pluck('id');
+	// $this->follows() just shows the relationship being used.
+	// We are getting id of users through relationship, without making a collection of users
+_______________________________________________________________________________________________________
+Route Key Name
+	default is 'id'
+	can be changed in 2 ways:
+	1. // OVERRIDE
+    	public function getRouteKeyName()
+    	{
+    	    return 'name';
+    	}
+    2. route file (web.php) by specifying the column name used by Route Model Binding
+    	Route::get('/profiles/{user:AttributeName}', 'ProfilesController@show')->name('profile');
+_______________________________________________________________________________________________________
+remove realtionship
+	"detach"
+		$this->follows()->detach($user);
+_______________________________________________________________________________________________________
+Global helper variables/methods
+	create a .php file in "app" directory
+	define global vars/methods
+	open composer.json file
+		in "autoload" section add:
+			"files": [
+				"app/helpers.php"
+			]
+	run "composer dump-autoload"
+_______________________________________________________________________________________________________
+append element to path
+	$user->path('edit')
+	
+	User.php
+	public function path($append = "")
+    {
+        $path = route('profile', $this->name);
+        return $append ? "{$path}/{$append}" : $path;
+    }
+_______________________________________________________________________________________________________
+return variables ($path/$append) value as strings
+	return $append ? "{$path}/{$append}" : $path;
+_______________________________________________________________________________________________________
+Validator: 'alpha_dash'
+	no spaces, only chars and numbers
+_______________________________________________________________________________________________________
+Validation rule:
+    'username' => ['string', 'required', 'max:255', 'alpha_dash', Rule::unique('users')->ignore($user)],
+    Rule:unique('tableName')->ignore($user)
+    	se non cambia username viene ignorata la regola perchè c'è ignore
+_______________________________________________________________________________________________________
+//UploadImage->store('directoryName') saves the image and returns a path where the image is stored
+_______________________________________________________________________________________________________
+Storage link to public directory
+	"php artisan storage:link"
+		creates link between root/storage/app/public directory and root/public/storage
+_______________________________________________________________________________________________________
+Custom Mutator
+	public function setPasswordAttribute($value=)
+    {
+        $this->attributes['password'] = bcrypt($value);
+    }
+_______________________________________________________________________________________________________
+Factory comands:
+	factory('App\Tweet',4)->create(); 
+	factory('App\Tweet',8)->create(['user_id'=>1]);
+	factory('App\User', 10)->create(); 
+	$users = App\User::all();
+	$users = $users->skip(1); elimina il primo elemento dell'array o quello con id = 1
+	$users->each(function($user){ factory('App\Tweet', 10)->create(['user_id'=>$user->id]);});
+_______________________________________________________________________________________________________
+On cascade:
+	$table->foreignId('user_id')->constrained()->onDelete('cascade');
+	// sono uguali
+	$table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+_______________________________________________________________________________________________________
+Turbo links:
+	<script src="http://unpkg.com/turbolinks"></script>
+	per evitare di aspettare ogni richiesta, questo fa tutte le richieste cosi le ho pronte e non devo aspettare che carichi
+	per esempio quando passo nel menù a sinistra da "explore" a "profile"...
